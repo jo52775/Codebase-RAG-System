@@ -1,10 +1,7 @@
-from fastapi import FastAPI, HTTPException, Depends
-from sqlalchemy.orm import Session
-from database.database import get_db
-from database.CodeBlock import CodeBlock
+from fastapi import FastAPI
+from loguru import logger
+from api.codebaseEmbedding import router as codebase_embedding_router
+
 app = FastAPI()
 
-@app.get("/")
-def read_root(db:Session = Depends(get_db)):
-    print('DATABASE OBJECT: ', db)
-    return {"Hello": "World?"}
+app.include_router(codebase_embedding_router, prefix="/api")
