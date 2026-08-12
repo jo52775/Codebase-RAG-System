@@ -5,8 +5,8 @@ from typing import Optional
 import uuid
 from pgvector.sqlalchemy import Vector
 
-class CodeBlock(Base):
-    __tablename__ = "code_blocks"
+class Chunk(Base):
+    __tablename__ = "chunks"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     vector: Mapped[list[float]] = mapped_column(Vector(1024), nullable=False)
@@ -15,7 +15,9 @@ class CodeBlock(Base):
     filepath: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
     start_line: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     end_line: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    function_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    entity_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    entity_type: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    code_repository: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     __table_args__ = (
         Index(
