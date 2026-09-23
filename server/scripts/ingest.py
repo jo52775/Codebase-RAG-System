@@ -36,7 +36,7 @@ def clear_database(db: Session):
                     raise db_err 
 
 
-def embed_classes(db: Session, classes: list[dict]):
+def ingest_classes(db: Session, classes: list[dict]):
     total_rows_inserted = 0
     valid_class_fqns = set()
     try:
@@ -53,7 +53,8 @@ def embed_classes(db: Session, classes: list[dict]):
         records = []
         for idx, chunk in enumerate(classes):
             record = {
-                "vector": vector_embeddings[idx],
+                "semantic_search_vector": vector_embeddings[idx],
+                "entity_name": chunk["entity_name"],
                 "fqn": chunk["fqn"],
                 "raw_code_text": chunk["raw_code_text"],
                 "filename": chunk["filename"],
@@ -75,7 +76,7 @@ def embed_classes(db: Session, classes: list[dict]):
                 raise db_err
 
         db.commit()
-        logger.info("Successfully stored all class embeddings and metadata from the codebase. \n")
+        logger.info("Successfully stored vectors and metadata for all classes in the codebase. \n")
         return total_rows_inserted, valid_class_fqns
                 
     except AuthenticationError:
@@ -87,7 +88,7 @@ def embed_classes(db: Session, classes: list[dict]):
         logger.error(f"Something went wrong with embedding and/or saving class chunks: {e}")
         raise e
 
-def embed_functions(db: Session, functions: list[dict], valid_class_fqns: set[str]):
+def ingest_functions(db: Session, functions: list[dict], valid_class_fqns: set[str]):
     total_rows_inserted = 0
     try:
         code_chunks = [function_chunk["raw_code_text"] for function_chunk in functions]
@@ -105,7 +106,8 @@ def embed_functions(db: Session, functions: list[dict], valid_class_fqns: set[st
                 chunk_parent_class_fqn = None
 
             record = {
-                "vector": vector_embeddings[idx],
+                "semantic_search_vector": vector_embeddings[idx],
+                "entity_name": chunk["entity_name"],
                 "raw_code_text": chunk["raw_code_text"],
                 "filename": chunk["filename"],
                 "entity_fqn": chunk["entity_fqn"],
@@ -127,7 +129,7 @@ def embed_functions(db: Session, functions: list[dict], valid_class_fqns: set[st
                 raise db_err
 
         db.commit()
-        logger.info("Successfully stored all function embeddings and metadata from the codebase. \n")
+        logger.info("Successfully stored vectors and metadata for all functions in the codebase. \n")
         return total_rows_inserted
                 
     except AuthenticationError:
