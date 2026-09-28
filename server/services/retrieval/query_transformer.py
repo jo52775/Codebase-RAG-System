@@ -1,8 +1,10 @@
 import os
+import re
 from langchain_openai import OpenAIEmbeddings
 from langsmith import AuthenticationError
 from dotenv import load_dotenv
 from loguru import logger
+from sqlalchemy import func
 
 load_dotenv()
 
@@ -15,6 +17,15 @@ embed = OpenAIEmbeddings(
     dimensions=1024,
     api_key=api_key
 )
+
+def user_query_to_tsquery(query_text: str):
+    cleaned_query = re.sub(r'[^\w\s.\-"]', '', query_text)
+    tokens = [t[:1000] for t in cleaned_query.split() if t.strip()]
+    if not tokens:
+        return func.to_tsquery("english", "''")
+
+    or_string = " | ".join(tokens)
+    return func.to_tsquery("english", or_string)
 
 def embed_user_query(query_text: str):
     """Leverage the OpenAI API to embed user's query and return it."""
