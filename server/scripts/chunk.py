@@ -178,6 +178,7 @@ def format_function_chunk(
             node.start_byte : node.end_byte
         ].decode("utf-8"),
         "filename": filename,
+        "entity_name": entity_name,
         "entity_fqn": entity_fqn,
         "parent_fqn": parent_fqn,
         "parent_class_fqn": parent_class_fqn,
@@ -199,6 +200,7 @@ def format_class_chunk(
         "raw_code_text": source_bytes[
             node.start_byte : node.end_byte
         ].decode("utf-8"),
+        "entity_name": entity_name,
         "filename": filename,
         "skeleton_text": skeleton_text,
         "start_line": start_line,
