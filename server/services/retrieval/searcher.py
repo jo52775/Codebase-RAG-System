@@ -29,7 +29,7 @@ def lexical_similarity_search(ts_query, db: Session):
             select(FunctionModel, func_rank)
             .where(FunctionModel.text_search_vector.op("@@")(ts_query))
             .order_by(desc(func_rank))
-            .limit(10)
+            .limit(20)
         )
     
         class_results = db.execute(class_stmt).all()
@@ -39,19 +39,31 @@ def lexical_similarity_search(ts_query, db: Session):
     
         for item, rank_score in class_results:
             candidates.append({
+                "id": item.id,
+                "fqn": item.fqn,  
+                "text": item.skeleton_text,
+                "score": rank_score,
+                "filename": item.filename,
+                "start_line": item.start_line,
+                "end_line": item.end_line,
                 "type": "class",
-                "model_obj": item,
-                "rank_score": rank_score,
             })
-    
+
         for item, rank_score in func_results:
             candidates.append({
+                "id": item.id,
+                "fqn": item.entity_fqn,
+                "text": item.raw_code_text,
+                "score": rank_score,
+                "parent_fqn": item.parent_fqn,
+                "parent_class_fqn": item.parent_class_fqn,
+                "filename": item.filename,
+                "start_line": item.start_line,
+                "end_line": item.end_line,
                 "type": "function",
-                "model_obj": item,
-                "rank_score": rank_score,
             })
     
-        candidates.sort(key=lambda x: x["rank_score"], reverse=True)
+        candidates.sort(key=lambda x: x["score"], reverse=True)
         return candidates
     except SQLAlchemyError as db_err:
             logger.error(f"Database failed during lexical similarity search: {db_err}")
@@ -66,7 +78,7 @@ def semantic_similarity_search(embedded_query: list[float], db: Session):
         stmt = (
             select(FunctionModel, similarity_score)
             .order_by(cosine_distance)
-            .limit(10)
+            .limit(20)
         )
         results = db.execute(stmt).all()
 
@@ -76,7 +88,7 @@ def semantic_similarity_search(embedded_query: list[float], db: Session):
                 "id": result.id,
                 "fqn": result.entity_fqn,
                 "text": result.raw_code_text,
-                "similarity_score": float(similarity_score),
+                "score": float(similarity_score),
                 "parent_fqn": result.parent_fqn,
                 "parent_class_fqn": result.parent_class_fqn,
                 "filename": result.filename,
@@ -85,6 +97,8 @@ def semantic_similarity_search(embedded_query: list[float], db: Session):
                 "type": "function"
             }
             chunks.append(chunk)
+
+        chunks.sort(key=lambda x: x["score"], reverse=True)
         return chunks
     except SQLAlchemyError as db_err:
         logger.error(f"Database failed during semantic similarity search: {db_err}")
