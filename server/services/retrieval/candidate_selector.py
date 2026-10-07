@@ -24,5 +24,18 @@ def kneedle_algorithm(candidates: list[dict]) -> list[dict]:
         logger.error(f"Error in Kneedle algorithm: {e}")
         raise e
 
+def return_unique_candidates(candidates: list[dict]):
+    unique_candidates = []
+    unique_candidate_IDs = set()
+
+    for c in candidates:
+        candidate_id = c["id"]
+        if candidate_id not in unique_candidate_IDs:
+            unique_candidate_IDs.add(candidate_id)
+            unique_candidates.append(c)
+    return unique_candidates
+        
+
+
     
         
