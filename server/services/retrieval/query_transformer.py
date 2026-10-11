@@ -31,7 +31,7 @@ def embed_user_query(query_text: str):
     """Leverage the OpenAI API to embed user's query and return it."""
     try:
         query_vector = embed.embed_query(query_text)
-        logger.info('Query text successfully embedded.')
+        logger.info("Query text successfully embedded.")
         return query_vector
     except Exception as e:
         logger.error(f"OpenAI API embedding failed for user query: {e}")

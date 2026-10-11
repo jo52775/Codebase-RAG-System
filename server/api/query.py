@@ -1,5 +1,4 @@
-from fastapi import APIRouter
-from fastapi import HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Request
 from sqlalchemy.orm import Session
 from database.database import get_db
 from loguru import logger
@@ -12,9 +11,10 @@ class UserQuery(BaseModel):
     text: str = Field(..., min_length=1)
 
 @router.post("/", status_code=status.HTTP_200_OK)
-def process_user_query(user_query: UserQuery, db: Session = Depends(get_db)):
+def process_user_query(user_query: UserQuery, request: Request, db: Session = Depends(get_db)):
     try:
-        chunks = retrieval_orchestrator(user_query.text, db)
+        reranker_model = request.state.reranker
+        chunks = retrieval_orchestrator(user_query.text, db, reranker_model)
         return chunks
     except Exception as e:
             raise HTTPException(
