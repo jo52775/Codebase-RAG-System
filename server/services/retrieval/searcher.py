@@ -40,6 +40,7 @@ def lexical_similarity_search(ts_query, db: Session):
         for item, rank_score in class_results:
             candidates.append({
                 "id": item.id,
+                "name": item.entity_name,
                 "fqn": item.fqn,  
                 "text": item.skeleton_text,
                 "score": rank_score,
@@ -52,6 +53,7 @@ def lexical_similarity_search(ts_query, db: Session):
         for item, rank_score in func_results:
             candidates.append({
                 "id": item.id,
+                "name": item.entity_name,
                 "fqn": item.entity_fqn,
                 "text": item.raw_code_text,
                 "score": rank_score,
@@ -86,6 +88,7 @@ def semantic_similarity_search(embedded_query: list[float], db: Session):
         for result, similarity_score in results:
             chunk = {
                 "id": result.id,
+                "name": result.entity_name,
                 "fqn": result.entity_fqn,
                 "text": result.raw_code_text,
                 "score": float(similarity_score),
