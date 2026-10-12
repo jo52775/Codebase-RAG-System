@@ -18,11 +18,16 @@ def splitCodebase(codefiles, repository_name = "tinyDB"):
     all_classes = []
 
     for filename, source_code in codefiles.items():
-        functions, classes = chunk_file(filename, source_code, repository_name)
+        formatted_filename = format_filename(filename)
+        functions, classes = chunk_file(formatted_filename, source_code, repository_name)
         all_functions.extend(functions)
         all_classes.extend(classes)
 
     return all_functions, all_classes
+
+
+def format_filename(filename):
+    return filename.split("/")[-1]
 
 
 def chunk_file(filename, source_code, repository_name):
