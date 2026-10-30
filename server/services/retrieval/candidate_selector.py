@@ -68,6 +68,26 @@ def rerank_candidates(query: str, candidates: list[dict], reranker: CrossEncoder
     except Exception as e:
        logger.error(f"Error in re-ranking step: {e}")
 
+def reciprocal_rank_fusion(lexical_candidates: list[dict], semantic_candidates: list[dict], k: int = 60):
+  fusion_scores = {}
+  chunk_map = {}
+
+  for rank, chunk in enumerate(lexical_candidates):
+    cid = chunk.get("id")
+    chunk_map[cid] = chunk
+    fusion_scores[cid] = fusion_scores.get(cid, 0.0) + 1.0 / (k + (rank + 1))
+
+  for rank, chunk in enumerate(semantic_candidates):
+    cid = chunk.get("id")
+    chunk_map[cid] = chunk
+    fusion_scores[cid] = fusion_scores.get(cid, 0.0) + 1.0 / (k + (rank + 1))
+
+  sorted_chunk_ids = sorted(
+      fusion_scores.keys(), key=lambda cid: fusion_scores[cid], reverse=True
+  )
+
+  return [chunk_map[cid] for cid in sorted_chunk_ids]
+
         
 
 
