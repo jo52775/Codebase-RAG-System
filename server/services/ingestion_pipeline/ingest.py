@@ -1,42 +1,23 @@
-import os
 from langchain_openai import OpenAIEmbeddings
 from langsmith import AuthenticationError
-from dotenv import load_dotenv
 from loguru import logger
 from sqlalchemy.orm import Session
 from database.models.chunk import FunctionModel, ClassModel
 from sqlalchemy import delete, insert
 from sqlalchemy.exc import SQLAlchemyError
 
-load_dotenv()
-
-repo_name = os.getenv("REPO_NAME")
-api_key = os.getenv("OPENAI_API_KEY")
-if not api_key:
-    raise ValueError("Cannot find OPENAI_API_KEY.")
-
-embed = OpenAIEmbeddings(
-    model="text-embedding-3-large",
-    dimensions=1024,
-    api_key=api_key
-)
-
 def clear_database(db: Session):
     try:
-        db.execute(
-            delete(FunctionModel).where(FunctionModel.code_repository == repo_name)
-        )
-        db.execute(
-                delete(ClassModel).where(ClassModel.code_repository == repo_name)
-            )
+        db.execute(delete(FunctionModel))
+        db.execute(delete(ClassModel))
         db.commit()
         logger.info("Database cleared successfully.")
     except SQLAlchemyError as db_err:
-                    logger.error(f"Database insert staging failed for classes: {db_err}")
-                    raise db_err 
+        logger.error(f"Database clearing failed: {db_err}")
+        raise db_err
 
 
-def ingest_classes(db: Session, classes: list[dict]):
+def ingest_classes(db: Session, classes: list[dict], embedder: OpenAIEmbeddings):
     total_rows_inserted = 0
     valid_class_fqns = set()
     try:
@@ -44,7 +25,8 @@ def ingest_classes(db: Session, classes: list[dict]):
         try:
             if not classes:
                 return 0, set()
-            vector_embeddings = embed.embed_documents(code_chunks)
+            
+            vector_embeddings = embedder.embed_documents(code_chunks)
             logger.info(f"Embedding successful for classes. {len(vector_embeddings)} vectors created. \n")
         except Exception as e:
             logger.error(f"OpenAI API generation failed for classes: {e}")
@@ -88,12 +70,12 @@ def ingest_classes(db: Session, classes: list[dict]):
         logger.error(f"Something went wrong with embedding and/or saving class chunks: {e}")
         raise e
 
-def ingest_functions(db: Session, functions: list[dict], valid_class_fqns: set[str]):
+def ingest_functions(db: Session, functions: list[dict], valid_class_fqns: set[str], embedder: OpenAIEmbeddings):
     total_rows_inserted = 0
     try:
         code_chunks = [function_chunk["raw_code_text"] for function_chunk in functions]
         try:
-            vector_embeddings = embed.embed_documents(code_chunks)
+            vector_embeddings = embedder.embed_documents(code_chunks)
             logger.info(f"Embedding successful for functions. {len(vector_embeddings)} vectors created. \n")
         except Exception as e:
             logger.error(f"OpenAI API generation failed for functions: {e}")

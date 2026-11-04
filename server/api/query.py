@@ -4,6 +4,7 @@ from database.database import get_db
 from loguru import logger
 from pydantic import BaseModel, Field
 from services.retrieval.orchestrator import retrieval_orchestrator
+from services.generation.orchestrator import generation_orchestator
 
 router = APIRouter(prefix="/query")
 
@@ -15,7 +16,8 @@ def process_user_query(user_query: UserQuery, request: Request, db: Session = De
     try:
         reranker_model = request.state.reranker
         chunks = retrieval_orchestrator(user_query.text, db, reranker_model)
-        return chunks
+        output = generation_orchestator(user_query.text, chunks)
+        return {"llm_output": output}
     except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

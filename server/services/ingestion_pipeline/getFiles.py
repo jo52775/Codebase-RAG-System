@@ -1,34 +1,23 @@
-import os
+from services.repository import Repository
 import base64
 import requests
-from dotenv import load_dotenv
 
-load_dotenv()
+def getCodeFiles(repository: Repository):
+    url = repository.url
+    headers = repository.headers
+    root_folder = repository.root_folder
 
-owner = "msiemens"
-repo = os.getenv("REPO_NAME")
-branch = "master"
-root_folder = "tinydb"
-API_KEY = os.getenv("GITHUB_API_KEY")
-
-headers = {
-    "Accept": "application/vnd.github+json",  
-    "Authorization": f"Bearer {API_KEY}",   
-}
-url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{branch}?recursive=1"
-
-def getCodeFiles():
-    tree_blobs = getRepoTree()
+    tree_blobs = getRepoTree(url, headers)
     code_files = {}
     
     for tree_blob in tree_blobs:
         codefile_path = tree_blob.get("path", "")
-        if codefile_path.startswith(root_folder):
-            source_code = getRawCode(tree_blob)
+        if codefile_path.startswith(root_folder) and codefile_path.endswith(".py"):
+            source_code = getRawCode(tree_blob, headers)
             code_files[codefile_path] = source_code        
     return code_files
 
-def getRepoTree():
+def getRepoTree(url, headers):
     result = requests.get(url, headers=headers)
     result.raise_for_status()
     
@@ -37,8 +26,10 @@ def getRepoTree():
     tree_blobs = [blob for blob in tree if blob.get("type") == "blob"]
     return tree_blobs
 
-def getRawCode(tree_blob):
+def getRawCode(tree_blob, headers):
     file_url = tree_blob.get("url")
+    if not file_url:
+        return ""
     result = requests.get(file_url, headers=headers)
     result.raise_for_status()
     result_json = result.json()
