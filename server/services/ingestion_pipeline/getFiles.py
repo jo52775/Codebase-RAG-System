@@ -12,7 +12,7 @@ def getCodeFiles(repository: Repository):
     
     for tree_blob in tree_blobs:
         codefile_path = tree_blob.get("path", "")
-        if codefile_path.startswith(root_folder):
+        if codefile_path.startswith(root_folder) and codefile_path.endswith(".py"):
             source_code = getRawCode(tree_blob, headers)
             code_files[codefile_path] = source_code        
     return code_files
@@ -28,6 +28,8 @@ def getRepoTree(url, headers):
 
 def getRawCode(tree_blob, headers):
     file_url = tree_blob.get("url")
+    if not file_url:
+        return ""
     result = requests.get(file_url, headers=headers)
     result.raise_for_status()
     result_json = result.json()
