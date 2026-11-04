@@ -1,25 +1,31 @@
 import tree_sitter_python
 from tree_sitter import Language, Parser, Query, QueryCursor
 
-PY_LANGUAGE = Language(tree_sitter_python.language())
-parser = Parser(PY_LANGUAGE)
+class Code_Chunker:
+    def __init__(self):
+        self.language = Language(tree_sitter_python.language())
+        self.parser = Parser(self.language)
+        query_string = """
+            (class_definition 
+                name: (identifier) @name) @chunk
+            (function_definition 
+                name: (identifier) @name) @chunk
+            """
+        self.query = Query(self.language, query_string)
+        self.cursor = QueryCursor(self.query)
 
-CHUNKING_QUERY = """
-(class_definition 
-    name: (identifier) @name) @chunk
-(function_definition 
-    name: (identifier) @name) @chunk
-"""
-query = Query(PY_LANGUAGE, CHUNKING_QUERY)
 
-
-def splitCodebase(codefiles, repository_name = "tinyDB"):
+def splitCodebase(codefiles, repository_name):
     all_functions = []
     all_classes = []
+    
+    chunker = Code_Chunker()
+    parser = chunker.parser
+    cursor = chunker.cursor
 
     for filename, source_code in codefiles.items():
         formatted_filename = format_filename(filename)
-        functions, classes = chunk_file(formatted_filename, source_code, repository_name)
+        functions, classes = chunk_file(parser, cursor, formatted_filename, source_code, repository_name)
         all_functions.extend(functions)
         all_classes.extend(classes)
 
@@ -30,11 +36,9 @@ def format_filename(filename):
     return filename.split("/")[-1]
 
 
-def chunk_file(filename, source_code, repository_name):
+def chunk_file(parser: Parser, cursor: QueryCursor, filename, source_code, repository_name):
     source_bytes = source_code.encode("utf-8")
     tree = parser.parse(source_bytes)
-
-    cursor = QueryCursor(query)
     all_matches = cursor.matches(tree.root_node)
 
     function_chunks = []
