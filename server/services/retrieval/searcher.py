@@ -73,39 +73,56 @@ def lexical_similarity_search(ts_query, db: Session):
 
 
 def semantic_similarity_search(embedded_query: list[float], db: Session):
-    try:
-        cosine_distance = FunctionModel.semantic_search_vector.cosine_distance(embedded_query)
-        similarity_score = (1 - cosine_distance).label("similarity_score")
+  try:
+    func_distance = FunctionModel.semantic_search_vector.cosine_distance(embedded_query)
+    func_score = (1 - func_distance).label("similarity_score")
+    func_stmt = (select(FunctionModel, func_score).order_by(func_distance).limit(20))
+    func_results = db.execute(func_stmt).all()
 
-        stmt = (
-            select(FunctionModel, similarity_score)
-            .order_by(cosine_distance)
-            .limit(20)
-        )
-        results = db.execute(stmt).all()
+    class_distance = ClassModel.semantic_search_vector.cosine_distance(embedded_query)
+    class_score = (1 - class_distance).label("similarity_score")
+    class_stmt = select(ClassModel, class_score).order_by(class_distance).limit(20)
+    class_results = db.execute(class_stmt).all()
 
-        chunks = []
-        for result, similarity_score in results:
-            chunk = {
-                "id": result.id,
-                "name": result.entity_name,
-                "fqn": result.entity_fqn,
-                "text": result.raw_code_text,
-                "score": float(similarity_score),
-                "parent_fqn": result.parent_fqn,
-                "parent_class_fqn": result.parent_class_fqn,
-                "filename": result.filename,
-                "start_line": result.start_line,
-                "end_line": result.end_line,
-                "type": "function"
-            }
-            chunks.append(chunk)
+    chunks = []
+    for result, score in func_results:
+      chunks.append({
+          "id": result.id,
+          "name": result.entity_name,
+          "fqn": result.entity_fqn,
+          "text": result.raw_code_text,
+          "score": float(score),
+          "parent_fqn": getattr(result, "parent_fqn", None),
+          "parent_class_fqn": getattr(result, "parent_class_fqn", None),
+          "filename": result.filename,
+          "start_line": result.start_line,
+          "end_line": result.end_line,
+          "type": "function",
+      })
 
-        chunks.sort(key=lambda x: x["score"], reverse=True)
-        return chunks
-    except SQLAlchemyError as db_err:
-        logger.error(f"Database failed during semantic similarity search: {db_err}")
-        raise db_err
+    for result, score in class_results:
+      chunks.append({
+          "id": result.id,
+          "name": result.entity_name,
+          "fqn": result.fqn,  
+          "text": result.raw_code_text,
+          "score": float(score),
+          "parent_fqn": None,  
+          "parent_class_fqn": None,
+          "filename": result.filename,
+          "start_line": result.start_line,
+          "end_line": result.end_line,
+          "type": "class",
+      })
+
+    chunks.sort(key=lambda x: x["score"], reverse=True)
+    return chunks[:20]
+  except SQLAlchemyError as db_err:
+    logger.error(
+        f"Database failed during semantic similarity search for functions and"
+        f" classes: {db_err}"
+    )
+    raise db_err
 
 
 def fetch_classes(class_fqn_set: set[str], db: Session):
