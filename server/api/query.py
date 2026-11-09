@@ -17,7 +17,7 @@ def process_user_query(user_query: UserQuery, request: Request, db: Session = De
         reranker_model = request.state.reranker
         chunks = retrieval_orchestrator(user_query.text, db, reranker_model)
         output = generation_orchestator(user_query.text, chunks)
-        return {"llm_output": output}
+        return {"llm_output": output, "retrieved_candidates": chunks}
     except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

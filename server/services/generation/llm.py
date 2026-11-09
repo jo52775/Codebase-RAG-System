@@ -12,7 +12,9 @@ class Generative_LLM:
                         2. Do NOT make assumptions or extrapolate beyond what is explicitly shown in the code context.
                         3. If the provided information is absolutely insufficient to answer the query, explicitly state: "The provided codebase context is insufficient to answer this query."
                         4. Keep the answer summary under 1,000 tokens.
-                        5. Identify and return the exact string UUIDs (`id`) for every code chunk you utilized to build your answer."""
+                        5. Do not include raw code blocks or code snippets in your response. 
+                        Instead, describe the logic, behavior, and implementation entirely in clear prose, 
+                        explicitly referencing the names of relevant classes, functions, and variables to explain how they work."""
         self.user_prompt = """User Query: "{query}"
 
                         Retrieved Codebase Context:
