@@ -24,16 +24,11 @@ def splitCodebase(codefiles, repository_name):
     cursor = chunker.cursor
 
     for filename, source_code in codefiles.items():
-        formatted_filename = format_filename(filename)
-        functions, classes = chunk_file(parser, cursor, formatted_filename, source_code, repository_name)
+        functions, classes = chunk_file(parser, cursor, filename, source_code, repository_name)
         all_functions.extend(functions)
         all_classes.extend(classes)
 
     return all_functions, all_classes
-
-
-def format_filename(filename):
-    return filename.split("/")[-1]
 
 
 def chunk_file(parser: Parser, cursor: QueryCursor, filename, source_code, repository_name):
@@ -174,6 +169,8 @@ def extract_class_skeleton(class_node, source_bytes):
 def get_line_numbers(node):
     return node.start_point[0] + 1, node.end_point[0] + 1
 
+def format_filename(filename):
+    return filename.split("/")[-1]
 
 def format_function_chunk(
     node, entity_name, filename, source_bytes, repository_name
@@ -181,12 +178,13 @@ def format_function_chunk(
     start_line, end_line = get_line_numbers(node)
     entity_fqn = build_fqn(filename, node)
     parent_fqn, parent_class_fqn = get_parents(node, filename)
+    formatted_filename = format_filename(filename)
 
     return {
         "raw_code_text": source_bytes[
             node.start_byte : node.end_byte
         ].decode("utf-8"),
-        "filename": filename,
+        "filename": formatted_filename,
         "entity_name": entity_name,
         "entity_fqn": entity_fqn,
         "parent_fqn": parent_fqn,
@@ -203,6 +201,7 @@ def format_class_chunk(
     start_line, end_line = get_line_numbers(node)
     fqn = build_fqn(filename, node)
     skeleton_text = extract_class_skeleton(node, source_bytes)
+    formatted_filename = format_filename(filename)
 
     return {
         "fqn": fqn,
@@ -210,7 +209,7 @@ def format_class_chunk(
             node.start_byte : node.end_byte
         ].decode("utf-8"),
         "entity_name": entity_name,
-        "filename": filename,
+        "filename": formatted_filename,
         "skeleton_text": skeleton_text,
         "start_line": start_line,
         "end_line": end_line,

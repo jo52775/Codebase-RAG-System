@@ -27,7 +27,7 @@ class ClassModel(Base):
         TSVECTOR,
         Computed(
             "setweight(to_tsvector('english', coalesce(entity_name, '')), 'A') || "
-            "setweight(to_tsvector('english', coalesce(fqn, '')), 'A') || "
+            "setweight(to_tsvector('english', regexp_replace(coalesce(fqn, ''), '[./]+', ' ', 'g')), 'A') || "
             "setweight(to_tsvector('english', coalesce(filename, '')), 'B') || "
             "setweight(to_tsvector('english', coalesce(raw_code_text, '')), 'D')",
             persisted=True,
@@ -75,7 +75,7 @@ class FunctionModel(Base):
             TSVECTOR,
             Computed(
                 "setweight(to_tsvector('english', coalesce(entity_name, '')), 'A') || "
-                "setweight(to_tsvector('english', coalesce(entity_fqn, '')), 'A') || "
+                "setweight(to_tsvector('english', regexp_replace(coalesce(entity_fqn, ''), '[./]+', ' ', 'g')), 'A') || "
                 "setweight(to_tsvector('english', coalesce(filename, '')), 'B') || "
                 "setweight(to_tsvector('english', coalesce(raw_code_text, '')), 'D')",
                 persisted=True,
