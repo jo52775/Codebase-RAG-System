@@ -1,0 +1,123 @@
+.app {
+  min-height: 100svh;
+}
+
+.main {
+  min-height: 100svh;
+  margin-left: var(--sidebar-width);
+  background:
+    radial-gradient(ellipse 70% 42% at 50% -12%, rgba(154, 168, 255, 0.09), transparent 58%),
+    var(--bg);
+}
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100svh;
+  padding: 40px 28px 64px;
+  box-sizing: border-box;
+}
+
+.stage:not(.is-results) .column {
+  margin-block: auto;
+}
+
+.column {
+  width: min(720px, 100%);
+  max-width: 100%;
+  min-width: 0;
+}
+
+.column.is-wide {
+  width: min(920px, 100%);
+}
+
+.repo-status {
+  margin-bottom: 22px;
+}
+
+.repo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 6px 10px 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.repo-chip strong {
+  overflow: hidden;
+  color: var(--text);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.repo-chip a {
+  color: var(--accent-strong);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.repo-chip a:hover {
+  text-decoration: underline;
+}
+
+.repo-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: #8fceb0;
+  box-shadow: 0 0 0 4px rgba(143, 206, 176, 0.12);
+}
+
+.repo-chip.is-live {
+  border-color: rgba(154, 168, 255, 0.7);
+  animation: repo-flash 1.4s ease;
+}
+
+@keyframes repo-flash {
+  from {
+    background: var(--accent-soft);
+  }
+  to {
+    background: rgba(255, 255, 255, 0.03);
+  }
+}
+
+.repo-banner {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: 14px;
+}
+
+@media (max-width: 860px) {
+  .main {
+    margin-left: 0;
+  }
+
+  .repo-chip {
+    flex-wrap: wrap;
+    border-radius: 16px;
+  }
+
+  .repo-chip strong {
+    white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .repo-chip.is-live {
+    animation: none;
+    border-color: rgba(154, 168, 255, 0.7);
+  }
+}
